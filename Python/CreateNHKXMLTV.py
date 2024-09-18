@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """ Python application to convert NHK EPG in JSON into XMLTV standard"""
 __author__ = "Squizzy"
 __copyright__ = "Copyright 2019, Squizzy"
@@ -20,7 +22,7 @@ jsonInFile = 'DownloadedJSON.json'
 # reference for later when pulling off the internet directly:
 #fxbx 7-20-2023 new authentication-less URL? replacing:
 JsonInURL = "https://nwapi.nhk.jp/nhkworld/epg/v7b/world/all.json"
-XMLOutFile = 'ConvertedNHK.xml'
+XMLOutFile = '/tmp/ConvertedNHK.xml'
 
 rootURL = "https://www3.nhk.or.jp"
 ChannelIconURL = rootURL + "nhkworld/assets/images/icon_nhkworld_tv.png"
@@ -121,10 +123,6 @@ for item in nhkimported["channel"]["item"]:
     progTitle.set('lang', 'en')
     progTitle.text = item["title"]
 
-    progSub = xml.SubElement(programme, 'sub-title')
-    progSub.set('lang', 'en')
-    progSub.text = item["subtitle"]
-
     progDesc = xml.SubElement(programme, 'desc')
     progDesc.set('lang', 'en')
     progDesc.text = item["description"]
@@ -152,6 +150,16 @@ for item in nhkimported["channel"]["item"]:
 
     progEpNum = xml.SubElement(programme, 'episode-num')
     progEpNum.text = item["airingId"]
+
+    subtitle = item["subtitle"]
+    if subtitle == "":
+        progSub = xml.SubElement(programme, 'sub-title')
+        progSub.set('lang', 'en')
+        progSub.text = item["airingId"]
+    else:
+        progSub = xml.SubElement(programme, 'sub-title')
+        progSub.set('lang', 'en')
+        progSub.text= item["subtitle"]
 
     progIcon = xml.SubElement(programme, 'icon')
     progIcon.set('src', rootURL + item["thumbnail"])
