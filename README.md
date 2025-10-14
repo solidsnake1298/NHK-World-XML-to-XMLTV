@@ -50,7 +50,7 @@
 
         Hash value: `7F93C6F9462DC6BE15A8B8C58F770463881BA8C6BF9E53D9257BD526F1032523`  
 
-    3. run `CreateNHKXMLTV.exe` 
+    3. run `CreateNHKXMLTV.exe`
     From the command line or Windows Explorer  
     The XMLTV is saved in the file `ConvertedNHK.xml` in the same folder.
 
