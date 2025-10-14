@@ -2,11 +2,11 @@
 
 ## From
 
-![NHK JSON](./nhk_json.png)
+![NHK JSON](./assets/nhk_json.png)
 
 ## To
 
-![NHK XMLTV](./nhk_xmltv.png)
+![NHK XMLTV](./assets/nhk_xmltv.png)
   
 ## The applications
 
