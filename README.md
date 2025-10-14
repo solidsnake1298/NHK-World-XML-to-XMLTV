@@ -1,5 +1,7 @@
 # NHK EPG to XMLTV converter
 
+IMPORTANT NOTE: NHK appears to have changed access to the API for their EPG. I am not currently sure if this is permanent, but in the meantime this application is not working.
+
 ## From
 
 ![NHK JSON](./assets/nhk_json.png)
