@@ -4,8 +4,9 @@ __copyright__ = "Copyright 2019-now, Squizzy"
 __credits__ = "The respective websites, and whoever took time to share information\
                  on how to use Python and modules"
 __license__ = "GPLv2"
-__version__ = "1.5" # Python-3 only
+__version__ = "1.6" # Python-3 only
 __maintainer__ = "Squizzy"
+__contributors__ = "TheDreadPirate"
 
 import json
 from datetime import datetime, timezone, timedelta
@@ -17,7 +18,6 @@ import calendar
 
 # Location of the NHK EPG JSON to be downloaded.
 # This might need occastional updating
-#URL_OF_NHK_JSON: str = "/media/library/liveTV/20251030.json"
 URL_OF_NHK_JSON_ROOT: str = "https://masterpl.hls.nhkworld.jp/epg/w/"
 
 # Location of the NHK streams for use in the XMLTV
@@ -153,7 +153,6 @@ def Generate_xmltv_xml(nhkimported: dict) -> xml.Element:
     Add_xml_element(channel, 'icon', attributes={'src': URL_OF_NHK_CHANNEL_ICON})
 
     # Go through all items, though only interested in the Programmes information here
-    #for item in nhkimported["data"]["item"]:
     for item in nhkimported["data"]:
 
         # construct the program info xml tree
