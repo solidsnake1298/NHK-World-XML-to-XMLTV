@@ -18,7 +18,7 @@ import calendar
 
 # Location of the NHK EPG JSON to be downloaded.
 # This might need occastional updating
-URL_OF_NHK_JSON_ROOT: str = "https://masterpl.hls.nhkworld.jp/epg/w/"
+URL_OF_NHK_JSON_ROOT: str = "https://masterpl.hls.nhkworld.jp/epg/w"
 
 # Location of the NHK streams for use in the XMLTV
 URL_OF_NHK_ROOT: str = "https://www3.nhk.or.jp"
@@ -43,41 +43,36 @@ TIMEZONE: timezone = timezone.utc
 TIME_OFFSET: str = ' +0000'
 
 # Import the .json from the URL
-def Import_nhk_epg_json(json_data, JsonIn: str) -> dict:
+def Import_nhk_epg_json(JsonIn: str) -> dict:
     """Downloads the NHK EPG JSON data from the specified URL and loads it into a variable.
     Args:
         JsonInURL (str): URL to download the NHK EPG JSON data.
     """
-        
     response: requests.Response = requests.get(url = JsonIn)
-    
+
     if response.status_code == 200:
         try:
             data: dict = response.json()
         except requests.exceptions.JSONDecodeError:
             print("problem with the parsing of the JSON file downloaded from NHK")
             sys.exit(1)
-    
+
     elif response.status_code == 404:
         print(f"Network error {response.status_code}: The NHK file containing the EPG JSON does not exist at the URL provided")
         sys.exit(1)
-        
+
     elif response.status_code == 403:
         print(f"Network error {response.status_code}: The NHK EPG JSON file exists but NHK rejects the request - try again later")
         sys.exit(1)
-    
+
     else:
         print(f"Network error {response.status_code}: Problem with the URL to the NHK JSON file provided")
         sys.exit(1)
     
-    print("NHK World EPG JSON file downloaded successfully")
+    print("NHK World EPG JSON file for " + JsonIn + " downloaded successfully")
+    print(JsonIn)
 
-    print("Extending JSON")
-    if json_data != "":
-        data.update(json_data)
-        return data
-    else:
-        return data
+    return data
 
 
 def Convert_unix_to_xmltv_date(dateTime: str) -> str:
@@ -131,7 +126,7 @@ def Xml_beautify(elem:xml.Element, level:int=0) -> bool:
     return True
 
 
-def Generate_xmltv_xml(nhkimported: dict) -> xml.Element:
+def Generate_xmltv_xml()  -> xml.Element:
     """Generates the XMLTV XML tree from the NHK JSON EPG data
 
     Args:
@@ -152,22 +147,31 @@ def Generate_xmltv_xml(nhkimported: dict) -> xml.Element:
     Add_xml_element(channel, 'display-name', text='NHK World')
     Add_xml_element(channel, 'icon', attributes={'src': URL_OF_NHK_CHANNEL_ICON})
 
-    # Go through all items, though only interested in the Programmes information here
-    for item in nhkimported["data"]:
+    today = datetime.today()
+    for delta in range(14):
+        date = today + timedelta(days=delta)
+        formatedDate = date.strftime("%Y%m%d")
+        URL_OF_NHK_JSON = URL_OF_NHK_JSON_ROOT + "/" + formatedDate + ".json"
+        print(URL_OF_NHK_JSON)
+        json_data: dict = Import_nhk_epg_json(URL_OF_NHK_JSON)
+        nhkimported = dict(json_data)
 
-        # construct the program info xml tree
-        programme: xml.Element = Add_xml_element(
-                                    root, 
-                                    'programme', 
-                                    attributes={'start': Convert_unix_to_xmltv_date(item["startTime"]) + TIME_OFFSET,
-                                                'stop': Convert_unix_to_xmltv_date(item["endTime"]) + TIME_OFFSET,
-                                                'channel':'nhk.world'})
+        # Go through all items, though only interested in the Programmes information here
+        for item in nhkimported["data"]:
 
-        Add_xml_element(programme, 'title', attributes={'lang': 'en'}, text=item["title"])
-        Add_xml_element(programme, 'sub-title', attributes={'lang': 'en'}, text=item["episodeTitle"] if item["episodeTitle"] else item["airingId"])
-        Add_xml_element(programme, 'desc', attributes={'lang': 'en'}, text=item["description"])
-        Add_xml_element(programme, 'episode-num', text=item["airingId"])
-        Add_xml_element(programme, 'icon', attributes={'src': item["episodeThumbnailURL"]})
+            # construct the program info xml tree
+            programme: xml.Element = Add_xml_element(
+                                        root, 
+                                        'programme', 
+                                        attributes={'start': Convert_unix_to_xmltv_date(item["startTime"]) + TIME_OFFSET,
+                                                    'stop': Convert_unix_to_xmltv_date(item["endTime"]) + TIME_OFFSET,
+                                                    'channel':'nhk.world'})
+
+            Add_xml_element(programme, 'title', attributes={'lang': 'en'}, text=item["title"])
+            Add_xml_element(programme, 'sub-title', attributes={'lang': 'en'}, text=item["episodeTitle"] if item["episodeTitle"] else item["airingId"])
+            Add_xml_element(programme, 'desc', attributes={'lang': 'en'}, text=item["description"])
+            Add_xml_element(programme, 'episode-num', text=item["airingId"])
+            Add_xml_element(programme, 'icon', attributes={'src': item["episodeThumbnailURL"]})
 
     if not Xml_beautify(root):
         print("Problem beautifying the XML")
@@ -198,15 +202,7 @@ def main() -> int:
     Returns:
         0: Successful execution
     """
-    today = datetime.today()
-    json_data: str = ""
-    for delta in range(14):
-       date = today + timedelta(days=delta)
-       formatedDate = date.strftime("%Y%m%d")
-       URL_OF_NHK_JSON = URL_OF_NHK_JSON_ROOT + "/" + formatedDate + ".json"
-       json_data: dict = Import_nhk_epg_json(json_data, URL_OF_NHK_JSON)
-    
-    XmltvXml: xml.Element = Generate_xmltv_xml(json_data)
+    XmltvXml: xml.Element = Generate_xmltv_xml()
     
     Save_xmltv_xml_to_file(XmltvXml)
     
