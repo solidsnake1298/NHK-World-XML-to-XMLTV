@@ -13,7 +13,6 @@ GENRES: dict[int|None, str] = {
 	21: "Entertainment"
 	22: "Pop Culture & Fashion"
 	23: "Science & Nature"
-	24: "Documentary",
 	25: "Sports"
 	26: "Drama"
 	27: "Interactive"
