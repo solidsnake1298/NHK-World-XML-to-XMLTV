@@ -42,42 +42,6 @@ TIMEZONE: timezone = timezone.utc
 # can be modified to adjust it: For example -0100 would change to -1 UTC
 TIME_OFFSET: str = ' +0000'
 
-# Genres from NHK network
-
-# Genres values come from NHK network under "genre" to become "category" in xmltv
-# values can be updated by running additional script: scrape_nhk_genres.py 
-# which retrives them from NHK's website directly and saves the result into "genres.txt" 
-# the content of which can replace the numbered lines below directly.
-# Of note: 24 has been found in the past but might not exist any more.
-
-# Genres are called "category" in XMLTV
-# These should not change too often but can be updated
-# by the output of the scrapping tool Scrape_nhk_Genres.py
-
-GENRES: dict[int|None, str] = {
-        None: "General",
-        11: "News",
-        12: "Current Affairs",
-        13: "Debate",
-        14: "Biz & Tech",
-        15: "Documentary",
-        16: "Interview",
-        17: "Food",
-        18: "Travel",
-        19: "Art & Design",
-        20: "Culture & Lifestyle",
-        21: "Entertainment",
-        22: "Pop Culture & Fashion",
-        23: "Science & Nature",
-        25: "Sports",
-        26: "Drama",
-        27: "Interactive",
-        28: "Learn Japanese",
-        29: "Disaster Preparedness",
-        30: "Kids",
-        31: "Anime & Manga"
-}
-
 # Import the .json from the URL
 def Import_nhk_epg_json(json_data, JsonIn: str) -> dict:
     """Downloads the NHK EPG JSON data from the specified URL and loads it into a variable.
@@ -204,24 +168,6 @@ def Generate_xmltv_xml(nhkimported: dict) -> xml.Element:
         Add_xml_element(programme, 'desc', attributes={'lang': 'en'}, text=item["description"])
         Add_xml_element(programme, 'episode-num', text=item["airingId"])
         Add_xml_element(programme, 'icon', attributes={'src': item["episodeThumbnailURL"]})
-
-        genre: str = item["genre"]["TV"]
-        category1: str = ""
-        category2: str = ""
-        if genre == "":
-            category1 = GENRES[None]
-        elif isinstance(genre, str):
-            category1 = GENRES[int(genre)].lower()
-        elif isinstance(genre, list):
-            category1 = GENRES[int(genre[0])].lower()
-            category2 = GENRES[int(genre[1])].lower()
-        else:
-            category1 = GENRES[None]
-
-        Add_xml_element(programme, 'category', attributes={'lang': 'en'}, text=category1)
-        
-        if category2 != "":
-            Add_xml_element(programme, 'category', attributes={'lang': 'en'}, text=category2)
 
     if not Xml_beautify(root):
         print("Problem beautifying the XML")
