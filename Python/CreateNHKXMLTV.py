@@ -73,16 +73,15 @@ def Import_nhk_epg_json(JsonIn: str) -> dict:
     return data
 
 
-def Convert_unix_to_xmltv_date(dateTime: str) -> str:
-    """ Converts the unit time from NHK to XMLTV time format
+def Convert_tokyo_to_utc(dateTime: str) -> str:
+    """ Converts the date-time from Tokyo's time zone to UTC.  Formats to XMLTV time format
     Args:
         u (str): Human readable date-time with time zone offset.  Will be parsed and converted to UTC.
     Returns:
         str: Returns the date in XMLTV format required for applications like Kodi.
     """    
-    formatedDate = datetime.strptime(dateTime, '%Y-%m-%dT%H:%M:%S%z')
-    utcTime = formatedDate.astimezone(pytz.utc).strftime('%Y%m%d%H%M%S')
-    return utcTime
+    return datetime.strptime(dateTime, '%Y-%m-%dT%H:%M:%S%z').astimezone(pytz.utc).strftime('%Y%m%d%H%M%S')
+
 
 def Add_xml_element(parent: xml.Element, tag: str, attributes:dict[str,str]|None=None, text:str|None=None) -> xml.Element:
     """ Add an XML element to a tree
@@ -157,8 +156,8 @@ def Generate_xmltv_xml()  -> xml.Element:
             programme: xml.Element = Add_xml_element(
                                         root, 
                                         'programme', 
-                                        attributes={'start': Convert_unix_to_xmltv_date(item["startTime"]) + TIME_OFFSET,
-                                                    'stop': Convert_unix_to_xmltv_date(item["endTime"]) + TIME_OFFSET,
+                                        attributes={'start': Convert_tokyo_to_utc(item["startTime"]) + TIME_OFFSET,
+                                                    'stop': Convert_tokyo_to_utc(item["endTime"]) + TIME_OFFSET,
                                                     'channel':'nhk.world'})
 
             Add_xml_element(programme, 'title', attributes={'lang': 'en'}, text=item["title"])
