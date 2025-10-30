@@ -10,10 +10,12 @@ __contributors__ = "TheDreadPirate"
 
 import json
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 import xml.etree.ElementTree as xml
 import requests
 import sys
 import calendar
+import pytz
 
 
 # Location of the NHK EPG JSON to be downloaded.
@@ -82,10 +84,9 @@ def Convert_unix_to_xmltv_date(dateTime: str) -> str:
     Returns:
         str: Returns the date in XMLTV format required for applications like Kodi.
     """    
-    splitDate = dateTime.split('+')
-    date = splitDate[0]
-    formatedDate = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
-    unixTime = calendar.timegm(formatedDate.utctimetuple())
+    formatedDate = datetime.strptime(dateTime, '%Y-%m-%dT%H:%M:%S%z')
+    utcTime = formatedDate.astimezone(pytz.utc)
+    unixTime = calendar.timegm(utcTime.utctimetuple())
     return datetime.fromtimestamp(unixTime, tz = TIMEZONE).strftime('%Y%m%d%H%M%S')
 
 def Add_xml_element(parent: xml.Element, tag: str, attributes:dict[str,str]|None=None, text:str|None=None) -> xml.Element:
