@@ -10,7 +10,6 @@ __contributors__ = "TheDreadPirate"
 
 import json
 from datetime import datetime, timezone, timedelta
-from zoneinfo import ZoneInfo
 import xml.etree.ElementTree as xml
 import requests
 import sys
@@ -70,9 +69,6 @@ def Import_nhk_epg_json(JsonIn: str) -> dict:
     else:
         print(f"Network error {response.status_code}: Problem with the URL to the NHK JSON file provided")
         sys.exit(1)
-    
-    print("NHK World EPG JSON file for " + JsonIn + " downloaded successfully")
-    print(JsonIn)
 
     return data
 
@@ -80,14 +76,13 @@ def Import_nhk_epg_json(JsonIn: str) -> dict:
 def Convert_unix_to_xmltv_date(dateTime: str) -> str:
     """ Converts the unit time from NHK to XMLTV time format
     Args:
-        u (str): Unix time in milliseconds as a string
+        u (str): Human readable date-time with time zone offset.  Will be parsed and converted to UTC.
     Returns:
         str: Returns the date in XMLTV format required for applications like Kodi.
     """    
     formatedDate = datetime.strptime(dateTime, '%Y-%m-%dT%H:%M:%S%z')
-    utcTime = formatedDate.astimezone(pytz.utc)
-    unixTime = calendar.timegm(utcTime.utctimetuple())
-    return datetime.fromtimestamp(unixTime, tz = TIMEZONE).strftime('%Y%m%d%H%M%S')
+    utcTime = formatedDate.astimezone(pytz.utc).strftime('%Y%m%d%H%M%S')
+    return utcTime
 
 def Add_xml_element(parent: xml.Element, tag: str, attributes:dict[str,str]|None=None, text:str|None=None) -> xml.Element:
     """ Add an XML element to a tree
@@ -128,11 +123,7 @@ def Xml_beautify(elem:xml.Element, level:int=0) -> bool:
 
 
 def Generate_xmltv_xml()  -> xml.Element:
-    """Generates the XMLTV XML tree from the NHK JSON EPG data
-
-    Args:
-        nhkimported (JSON): The NHK JSON data to be converted to XMLTV XML
-        
+    """Generates the XMLTV XML tree from the NHK JSON EPG data        
     Returns:
         root (xml.tree): the XML tree created
     """
@@ -148,14 +139,16 @@ def Generate_xmltv_xml()  -> xml.Element:
     Add_xml_element(channel, 'display-name', text='NHK World')
     Add_xml_element(channel, 'icon', attributes={'src': URL_OF_NHK_CHANNEL_ICON})
 
+    # Gets today's date.  Applies timedelta to generate date format need to get each day's JSON.
+    # Range starts at 0 to get today's JSON.
     today = datetime.today()
     for delta in range(14):
         date = today + timedelta(days=delta)
         formatedDate = date.strftime("%Y%m%d")
         URL_OF_NHK_JSON = URL_OF_NHK_JSON_ROOT + "/" + formatedDate + ".json"
-        print(URL_OF_NHK_JSON)
-        json_data: dict = Import_nhk_epg_json(URL_OF_NHK_JSON)
-        nhkimported = dict(json_data)
+        nhkimported: dict = Import_nhk_epg_json(URL_OF_NHK_JSON)
+
+        print("NHK World EPG JSON file for " + formatedDate + " downloaded successfully")
 
         # Go through all items, though only interested in the Programmes information here
         for item in nhkimported["data"]:
