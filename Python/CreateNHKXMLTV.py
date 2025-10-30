@@ -33,11 +33,7 @@ XMLTV_XML_FILE: str = 'ConvertedNHK.xml'
 
 # Downloaded JSON file for tests, or created when DEBUG is on
 DEBUG: bool = False
-TEST_NHK_JSON: str = 'DownloadedJSON.json'
-
-# Local time zone that will be used for the timestamps in the XMLTV file
-# Currently set for UTC as for Continental European use
-TIMEZONE: timezone = timezone.utc
+TEST_NHK_JSON: str = './DownloadedJSON.json'
 
 # In case the time offset is incorrect in the XMLTV file, the value below 
 # can be modified to adjust it: For example -0100 would change to -1 UTC
@@ -49,6 +45,12 @@ def Import_nhk_epg_json(JsonIn: str) -> dict:
     Args:
         JsonInURL (str): URL to download the NHK EPG JSON data.
     """
+
+    if DEBUG:
+        with open(TEST_NHK_JSON, 'r', encoding='utf8') as nhkjson:
+            data: dict = json.load(nhkjson)
+        return data
+    
     response: requests.Response = requests.get(url = JsonIn)
 
     if response.status_code == 200:
@@ -141,13 +143,17 @@ def Generate_xmltv_xml()  -> xml.Element:
     # Gets today's date.  Applies timedelta to generate date format need to get each day's JSON.
     # Range starts at 0 to get today's JSON.
     today = datetime.today()
-    for delta in range(14):
+    delta = 0
+    while delta < 14:
         date = today + timedelta(days=delta)
         formatedDate = date.strftime("%Y%m%d")
         URL_OF_NHK_JSON = URL_OF_NHK_JSON_ROOT + "/" + formatedDate + ".json"
-        nhkimported: dict = Import_nhk_epg_json(URL_OF_NHK_JSON)
-
-        print("NHK World EPG JSON file for " + formatedDate + " downloaded successfully")
+        if DEBUG:
+            delta = 14
+            nhkimported: dict = Import_nhk_epg_json(TEST_NHK_JSON)
+        else:
+            nhkimported: dict = Import_nhk_epg_json(URL_OF_NHK_JSON)
+            print("NHK World EPG JSON file for " + formatedDate + " downloaded successfully")
 
         # Go through all items, though only interested in the Programmes information here
         for item in nhkimported["data"]:
@@ -165,6 +171,7 @@ def Generate_xmltv_xml()  -> xml.Element:
             Add_xml_element(programme, 'desc', attributes={'lang': 'en'}, text=item["description"])
             Add_xml_element(programme, 'episode-num', text=item["airingId"])
             Add_xml_element(programme, 'icon', attributes={'src': item["episodeThumbnailURL"]})
+        delta += 1
 
     if not Xml_beautify(root):
         print("Problem beautifying the XML")
