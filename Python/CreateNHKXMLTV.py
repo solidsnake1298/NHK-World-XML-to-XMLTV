@@ -1,11 +1,13 @@
+#!/usr/bin/python3
+
 """ Python application to convert NHK EPG in JSON into XMLTV standard"""
 __author__ = "Squizzy"
 __copyright__ = "Copyright 2019-now, Squizzy"
 __credits__ = "The respective websites, and whoever took time to share information\
                  on how to use Python and modules"
 __license__ = "GPLv2"
-__version__ = "1.6" # Python-3 only
-__maintainer__ = "Squizzy"
+__version__ = "2.0" # Python-3 only
+__maintainer__ = "TheDreadPirate"
 __contributors__ = "TheDreadPirate"
 
 import json
@@ -13,9 +15,31 @@ from datetime import datetime, timezone, timedelta
 import xml.etree.ElementTree as xml
 import requests
 import sys
-import calendar
+import argparse
 import pytz
 
+# Parse CLI arguments
+parser = argparse.ArgumentParser(description='Retrieves 14 days worth of EPG for NHK World Japan and converts it to XMLTV format.')
+parser.add_argument('-o', '--output', type=str, required=True,
+                    help='The path for the XML output file.')
+parser.add_argument('-d', '--days', type=int, default=0,
+                    help='The number of days of EPG to retrieve.')
+parser.add_argument('--debug', action='store_true', default=False,
+                    help='Enables debug mode.  Requires --debugFile')
+parser.add_argument('--debugFile', type=str,
+                    help='The path for the JSON input file for debugging.')
+
+args = parser.parse_args()
+
+if args.debug is True and args.debugFile is None:
+    parser.error("--debug requires --debug-file")
+elif args.debug is False and args.debugFile:
+    parser.error("Debug file provided, but debugging is not enabled.")
+
+if (args.days < 1 or args.days > 14) and args.debug is False:
+    parser.error("Must provide a valid integer value for -d/--days between 1 and 14")
+elif args.debug and args.days != 0:
+    print("Debugging is enabled.  Ignoring days value.")
 
 # Location of the NHK EPG JSON to be downloaded.
 # This might need occastional updating
@@ -27,13 +51,19 @@ URL_OF_NHK_ROOT: str = "https://www3.nhk.or.jp"
 # Location of the NHK channel icon
 URL_OF_NHK_CHANNEL_ICON: str = URL_OF_NHK_ROOT + "nhkworld/assets/images/icon_nhkworld_tv.png"
 
+# The number of days to retrieve from NHK's EPG API
+DAYS = args.days
+
 # Name of the file that is created by this application 
 # which contains the XMLTV XML of the NHK EPG
-XMLTV_XML_FILE: str = 'ConvertedNHK.xml'
+XMLTV_XML_FILE: str = args.output
 
 # Downloaded JSON file for tests, or created when DEBUG is on
-DEBUG: bool = False
-TEST_NHK_JSON: str = './DownloadedJSON.json'
+DEBUG: bool = args.debug
+if DEBUG is True:
+    DAYS = 1
+
+TEST_NHK_JSON: str = args.debugFile
 
 # In case the time offset is incorrect in the XMLTV file, the value below 
 # can be modified to adjust it: For example -0100 would change to -1 UTC
@@ -47,8 +77,12 @@ def Import_nhk_epg_json(JsonIn: str) -> dict:
     """
 
     if DEBUG:
-        with open(TEST_NHK_JSON, 'r', encoding='utf8') as nhkjson:
-            data: dict = json.load(nhkjson)
+        try:
+            with open(TEST_NHK_JSON, 'r', encoding='utf8') as nhkjson:
+                data: dict = json.load(nhkjson)
+        except Exception as error:
+            print(error)
+            sys.exit(1)
         return data
     
     response: requests.Response = requests.get(url = JsonIn)
@@ -80,7 +114,7 @@ def Convert_tokyo_to_utc(dateTime: str) -> str:
     Args:
         u (str): Human readable date-time with time zone offset.  Will be parsed and converted to UTC.
     Returns:
-        str: Returns the date in XMLTV format required for applications like Kodi.
+        str: Returns the UTC date in XMLTV format required for applications like Kodi and Jellyfin.
     """    
     return datetime.strptime(dateTime, '%Y-%m-%dT%H:%M:%S%z').astimezone(pytz.utc).strftime('%Y%m%d%H%M%S')
 
@@ -144,13 +178,13 @@ def Generate_xmltv_xml()  -> xml.Element:
     # Range starts at 0 to get today's JSON.
     today = datetime.today()
     delta = 0
-    while delta < 14:
+    while delta < DAYS:
         date = today + timedelta(days=delta)
         formatedDate = date.strftime("%Y%m%d")
         URL_OF_NHK_JSON = URL_OF_NHK_JSON_ROOT + "/" + formatedDate + ".json"
         if DEBUG:
-            delta = 14
             nhkimported: dict = Import_nhk_epg_json(TEST_NHK_JSON)
+            print("NHK World EPG debug JSON file " + TEST_NHK_JSON + " read successfully")
         else:
             nhkimported: dict = Import_nhk_epg_json(URL_OF_NHK_JSON)
             print("NHK World EPG JSON file for " + formatedDate + " downloaded successfully")
@@ -190,11 +224,14 @@ def Save_xmltv_xml_to_file(root: xml.Element) -> bool:
     """
     # Export the xml to a local file
     tree:xml.ElementTree = xml.ElementTree(root)
-    with open(XMLTV_XML_FILE, 'w+b') as outFile:
-        tree.write(outFile)
-    
-    print(f"{XMLTV_XML_FILE} created successfully")
-    return True
+    try:
+        with open(XMLTV_XML_FILE, 'w+b') as outFile:
+            tree.write(outFile)
+            print(f"{XMLTV_XML_FILE} created successfully")
+            return True
+    except Exception as error:
+        print(error)
+        return False
 
 
 def main() -> int:
