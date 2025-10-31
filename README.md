@@ -18,7 +18,7 @@ number of days of EPG to retrieve, and switches to enable debug mode.
 
     Extracts NHK's EPG in JSON from its website  
     Converts it to an XMLTV file  
-    Saves the XMLTV to a text file: `ConvertedNHK.xml`  
+    Saves the XMLTV to a text file specified with the -o argument.
 
 ## How to run the application which converts the EPG to XMLTV: `CreateNHKXMLTV`
 
