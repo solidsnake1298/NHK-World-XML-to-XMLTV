@@ -78,8 +78,12 @@ def Import_nhk_epg_json(JsonIn: str) -> dict:
     """
 
     if DEBUG:
-        with open(TEST_NHK_JSON, 'r', encoding='utf8') as nhkjson:
-            data: dict = json.load(nhkjson)
+        try:
+            with open(TEST_NHK_JSON, 'r', encoding='utf8') as nhkjson:
+                data: dict = json.load(nhkjson)
+        except Exception as error:
+            print(error)
+            sys.exit(1)
         return data
     
     response: requests.Response = requests.get(url = JsonIn)
