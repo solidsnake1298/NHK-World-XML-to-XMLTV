@@ -1,5 +1,9 @@
 # NHK EPG to XMLTV converter
 
+Forked from Squizzy's original python script and updated to work with NHK World Japan's updated EPG API.
+I've also added command line arguments to replace some of the hard coded values, like output file name/location,
+number of days of EPG to retrieve, and switches to enable debug mode.
+
 ## From
 
 ![NHK JSON](./assets/nhk_json.png)
@@ -15,18 +19,6 @@
     Extracts NHK's EPG in JSON from its website  
     Converts it to an XMLTV file  
     Saves the XMLTV to a text file: `ConvertedNHK.xml`  
-  
-    A python 3.x and a separate python 2.7 versions are available  
-  
-- __`scrape_nhk_genres.py`__  
-
-    NHK genres scraping application identify the genres NHK defined.  
-    Saves the genres to a text file: `genres.txt`  
-    This can be copied and pasted over (but currently isn't) into `CreateNHKXMLTV.py`  
-  
-    A python 3.x only version is available
-
-- __RELEASE 1.6__
 
 ## How to run the application which converts the EPG to XMLTV: `CreateNHKXMLTV`
 
@@ -39,6 +31,8 @@ Two files are needed: CreateNHKXMLTV.py and requirements.txt.
 
     Open a console:
 
+    > Windows, run Command Prompt (cmd.exe) or Powershell (powershell.exe)
+    > MacOS: run Terminal (Terminal.app)
     > Linux: run Terminal (Terminal)
 
     Navigate to your preferred location then create the folder, e.g.:
@@ -55,16 +49,16 @@ Two files are needed: CreateNHKXMLTV.py and requirements.txt.
 
     - Either direct from here (place the files in the folder created earlier):
     > [CreateNHKXMLTV.py](https://github.com/solidsnake1298/NHK-World-EPG-to-XMLTV/blob/master/Python/CreateNHKXMLTV.py)  
-    > [requirements.txt](https://github.com/Squizzy/NHK-World-EPG-to-XMLTV/blob/master/Python/requirements.txt)
+    > [requirements.txt](https://github.com/solidsnake1298/NHK-World-EPG-to-XMLTV/blob/master/Python/requirements.txt)
 
     - or from the terminal:  
 
     ```shell
-    curl -O https://github.com/Squizzy/NHK-World-EPG-to-XMLTV/blob/master/Python/CreateNHKXMLTV.py
+    curl -O https://raw.githubusercontent.com/solidsnake1298/NHK-World-EPG-to-XMLTV/refs/heads/master/Python/CreateNHKXMLTV.py
     ```
 
     ```shell
-    curl -O https://github.com/Squizzy/NHK-World-EPG-to-XMLTV/blob/master/Python/requirements.txt
+    curl -O https://raw.githubusercontent.com/solidsnake1298/NHK-World-EPG-to-XMLTV/refs/heads/master/Python/requirements.txt
     ```
 
 3. Set up the environment:
@@ -100,90 +94,32 @@ Two files are needed: CreateNHKXMLTV.py and requirements.txt.
 4. Launch
 
     ```shell
-    python CreateNHKXMLTV.py
+    python CreateNHKXMLTV.py -d 14 -o OutputFile.xml
     ```
 
-5. The XMLTV is saved in the file `ConvertedNHK.xml`.
+5. The XMLTV is saved in the file/path you provided with the -o option.
 
-### Python2
+Should run on Windows, Mac, and Linux.  I've only tested on Linux.
 
-the __p2__ branch of this repository contains the python v2 version, as per external contributor dazzhk recommendation.  
-it is not merged into master yet as it is not tested.
-The same procedure as above.
-  
-However different files are currently needed
+## Arguments
 
-1. Same as above.
-
-2. Download the required files from there repository (Section 2. of Python3 abobe):
-
-    - Either direct from here (place the files in the folder created earlier):
-
-    > [CreateNHKXMLTV.py](https://github.com/Squizzy/NHK-World-EPG-to-XMLTV/blob/p2/Python/CreateNHKXMLTV.py)  
-    > [requirements.txt](https://github.com/Squizzy/NHK-World-EPG-to-XMLTV/blob/p2/Python/requirements.txt)
-
-    - or from the terminal:  
-
-    ```shell
-    curl -O https://github.com/Squizzy/NHK-World-EPG-to-XMLTV/blob/p2/Python/CreateNHKXMLTV.py
-    ```
-
-    ```shell
-    curl -O https://github.com/Squizzy/NHK-World-EPG-to-XMLTV/blob/p2/Python/requirements.txt
-    ```
-
-3. Set up the environment.
-
-    1. the virtual environment must be for python2
-
-        >Note: the first `venv` below represent the application executed to create the virtual environment and the second the name of the folder it is created in. If trying to compile with python 3 and python 2.7, the second `venv` could be called venv2.7 for example. This folder name would need to be used in step 2 of this section.
-
-        ```shell
-        python2 -m venv venv
-        ```
-
-    2. same as above
-
-    3. same as above
-
-4. Same as above.
-
-5. Same as above.
-
-## How to run the application which recovers the genres NHK support
-
-### NHK genres scraper: `scrape_nhk_genres.py`
-
-Downloads the list of genres from the NHK World website (different URL from EPG)
-attempts to extract genres as NHK defines them.
-Saves the result into a text file, `genres.txt`.
-The content of this text file can be copied and pasted into the create `CreateNHKXMLTV.py` file before it is run so the latest genres can be applied.
-
-### Requirements
-
-- Python 3.x. (python v2 not yet available)
-- its modules dependencies are included in the requirements.txt file so no need to re-run it.
-
-### Launch
-
-```shell
-python3 scrape_nhk_genres.py
-```
-
-Runs on Windows, MacOS, Linux.  
+    > -d <int>          # Provide an integer value between 1 and 14 to grab that many days of EPG
+    > -o <file path>    # Provide a path and file name for the XMLTV output file
+    > --debug           # Enables debugging/testing without pulling from NHK.  Requires a JSON file provided by --debugFile FILENAME (see below)
+    > --debugFile <json filename>
 
 ## Background info
 
 NHK World is a Japanese television channel that broadcasts a wide range of programming, including news, sports, and entertainment.
 This is information that was collected from different sources.
 
-## Note
-
-All other files in this repository have no value and are only here mostly for historical reason (until they are removed)
-
 ## Version history
 
 ### CreateNHKXMLTV.py
+
+20251031 - v2.0
+    - Added CLI arguments to replace hard coded values.
+    - Removed genre related artifacts.  NHKW does not appear to use them in their EPG anymore.
 
 20251029 - v1.6
     - Updated to work with new NHK World Japan EPG API.
@@ -229,7 +165,10 @@ All other files in this repository have no value and are only here mostly for hi
 20190119 - v1.0
     - First release as working version
 
-### scrape_nhk_genres.py
+### scrape_nhk_genres.py  (removed)
+
+20251031 - v2.0
+    - Removed
 
 20250715 - v1.2
     - Error checking on NHK URL access added for feedback
