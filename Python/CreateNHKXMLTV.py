@@ -7,7 +7,7 @@ __credits__ = "The respective websites, and whoever took time to share informati
                  on how to use Python and modules"
 __license__ = "GPLv2"
 __version__ = "2.0" # Python-3 only
-__maintainer__ = "Squizzy"
+__maintainer__ = "TheDreadPirate"
 __contributors__ = "TheDreadPirate"
 
 import json
@@ -16,7 +16,6 @@ import xml.etree.ElementTree as xml
 import requests
 import sys
 import argparse
-import calendar
 import pytz
 
 # Parse CLI arguments
